@@ -11,7 +11,7 @@ import (
 type CategoryRepositoryImpln struct {
 }
 
-func NewCategoryRepository() CategoryRepository {
+func NewCategoryRepository() *CategoryRepositoryImpln {
 	return &CategoryRepositoryImpln{}
 }
 
