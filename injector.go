@@ -11,7 +11,6 @@ import (
 	"restful_api/repository"
 	"restful_api/service"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/google/wire"
 	"github.com/julienschmidt/httprouter"
 )
@@ -21,12 +20,23 @@ var categorySet = wire.NewSet(repository.NewCategoryRepository, wire.Bind(new(re
 	new(*service.CategoryServiceImpl)),
 	controller.NewCategoryController,
 	wire.Bind(new(controller.CategoryController),
-		new(controller.CategoryControllerImpln)),
+		new(*controller.CategoryControllerImpln)),
 )
 
 func InitializedServer() *http.Server {
 
-	wire.Build(app.NewDB, validator.New, categorySet, app.NewRouter, wire.Bind(new(http.Handler), new(*httprouter.Router)), middleware.NewAuthMiddleware, NewServer)
+	wire.Build(
+		app.NewDB,
+		app.RedValidator,
+		categorySet,
+		app.NewRouter,
+		wire.Bind(
+			new(http.Handler),
+			new(*httprouter.Router),
+		),
+		middleware.NewAuthMiddleware,
+		NewServer,
+	)
 
 	return nil
 }

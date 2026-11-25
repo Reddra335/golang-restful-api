@@ -39,36 +39,34 @@ func (c *CategoryRepositoryImpln) Delete(ctx context.Context, tx *sql.Tx, catego
 
 }
 func (c *CategoryRepositoryImpln) FindById(ctx context.Context, tx *sql.Tx, categoryId int) (domain.Category, error) {
-	SQL := "select id, name from category where id =?"
-	rows, err := tx.QueryContext(ctx, SQL, categoryId)
-	helper.ErrorT(err)
-
-	defer rows.Close() // <--- WAJIB TAMBAHKAN INI
+	SQL := "select id, name from category where id = ?"
 
 	category := domain.Category{}
-
-	if rows.Next() {
-		err := rows.Scan(&category.Id, &category.Name)
-		helper.ErrorT(err)
-		return category, nil
-	} else {
-		return category, errors.New("Category is not found")
+	err := tx.QueryRowContext(ctx, SQL, categoryId).Scan(&category.Id, &category.Name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return category, errors.New("Category is not found")
+		}
+		return category, err
 	}
+	return category, nil
 }
 func (c *CategoryRepositoryImpln) FindAll(ctx context.Context, tx *sql.Tx) []domain.Category {
 	SQL := "select id,name from category"
 	rows, err := tx.QueryContext(ctx, SQL)
-
 	helper.ErrorT(err)
 	defer rows.Close()
 
-	var categories []domain.Category
+	categories := []domain.Category{}
 	for rows.Next() {
 		category := domain.Category{}
 		err := rows.Scan(&category.Id, &category.Name)
 		helper.ErrorT(err)
 		categories = append(categories, category)
-
 	}
+
+	// cek error setelah loop
+	helper.ErrorT(rows.Err())
+
 	return categories
 }
